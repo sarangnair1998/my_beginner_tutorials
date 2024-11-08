@@ -16,11 +16,20 @@ find_package(std_srvs REQUIRED)
 add_executable(publisher_node src/publisher_node.cpp)
 ament_target_dependencies(publisher_node rclcpp std_msgs std_srvs)
 
+add_executable(subscriber_node src/subscriber_node.cpp)
+ament_target_dependencies(subscriber_node rclcpp std_msgs)
+
 # Install targets
 install(TARGETS
   publisher_node
   DESTINATION lib/${PROJECT_NAME}
 )
+
+install(TARGETS
+  subscriber_node
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 
 # Testing dependencies
 if(BUILD_TESTING)
