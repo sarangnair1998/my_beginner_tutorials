@@ -2,22 +2,29 @@
 
 ## Overview
 
-This repository contains the `beginner_tutorials` ROS 2 package. The main purpose of this package is to introduce the basics of creating and running ROS 2 nodes using the C++ programming language. This package includes a simple publisher node that publishes custom messages to a topic.
-
-The goal is to help beginners understand fundamental concepts in ROS 2, such as creating nodes, publishing messages, and understanding the ROS 2 communication mechanism.
+This repository contains the `beginner_tutorials` ROS 2 package. The main purpose of this package is to introduce the basics of creating and running ROS 2 nodes using the C++ programming language. This package includes a publisher node that publishes custom messages to a topic, a subscriber node that receives those messages, and a service to toggle the publishing on or off.
 
 ## Features
-- A publisher node (`publisher_node.cpp`) that publishes a custom message to a ROS 2 topic.
-- The node is implemented in C++ and uses ROS 2 Humble libraries for message passing.
+
+- **Publisher Node (`publisher_node.cpp`)**:
+  - Publishes a custom message to a ROS 2 topic.
+  - Provides a service `/toggle_publishing` to enable or disable message publishing.
+  - Uses all five ROS logging levels (DEBUG, INFO, WARN, ERROR, FATAL).
+
+- **Subscriber Node (`subscriber_node.cpp`)**:
+  - Subscribes to the published topic and logs received messages.
+  - Detects inactivity and logs a warning if no messages are received for a certain period.
+
+- **Launch File (`publisher_subscriber_launch.py`)**:
+  - Launches both publisher and subscriber nodes.
+  - Allows users to set the `publish_frequency` parameter for the publisher node via command-line arguments.
 
 ## Assumptions/Dependencies
 
 - **ROS 2 Distribution**: This package has been developed and tested using **ROS 2 Humble**.
-- **C++17 Standard**: The code is written using C++17 features, so make sure that your build environment supports C++17.
+- **C++17 Standard**: The code is written using C++17 features, so ensure that your build environment supports C++17.
 - **Colcon**: The recommended build tool for ROS 2.
 - **clang-tidy** and **cpplint**: Used for code quality and style checking.
-
-Ensure you have ROS 2 Humble properly installed and sourced on your system. For installation instructions, refer to the [ROS 2 Humble Installation Guide](https://docs.ros.org/en/humble/Installation.html).
 
 ## Build Steps
 
@@ -46,33 +53,44 @@ To build this package, follow these steps:
 
 ## Run Steps
 
-To run the publisher node:
 
 1. **Navigate to Your Workspace** (if not already there):
    ```sh
    cd ~/my_beginner_tutorials
    ```
 
-2. **Run the Publisher Node**:
+2. **Run Both Nodes Using the Launch File**:
    ```sh
-   ros2 run beginner_tutorials publisher_node
+   ros2 launch beginner_tutorials publisher_subscriber_launch.py
+
+   ```
+   You can also modify the publish_frequency parameter by passing it as a command-line argument:
+   ```sh
+   ros2 launch beginner_tutorials publisher_subscriber_launch.py publish_frequency:=5.0
+
    ```
 
-This command will start the publisher node, which will begin publishing custom string messages to the specified topic.
+3. **Using the Service to Toggle Publishing**:
 
-## Code Quality Tools
+   The publisher node provides a service to enable or disable message publishing. Use the following commands:
 
-- **cpplint**: Run `cpplint` to check code style:
-  ```sh
-  cpplint --filter=-build/c++11,+build/c++17,-build/namespaces,-build/include_order src/publisher_node.cpp > cpplint_output.txt
-  ```
+   Disable Publishing:
 
-- **clang-tidy**: Run `clang-tidy` to check code quality:
-  ```sh
-  clang-tidy src/publisher_node.cpp -p /home/sarang/my_beginner_tutorials/build/beginner_tutorials -- -std=c++17
-  ```
+   ```sh
+   ros2 service call /toggle_publishing std_srvs/srv/SetBool "{data: false}"
+   ```
+
+   Enable Publishing:
+
+   ```sh
+   ros2 service call /toggle_publishing std_srvs/srv/SetBool "{data: true}"
+   ```
+
+
 
 ## License
 
 This package is licensed under the MIT License. See the `LICENSE` file for more information.
+
+
 
