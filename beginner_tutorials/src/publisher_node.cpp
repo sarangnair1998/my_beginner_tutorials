@@ -2,7 +2,7 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <std_msgs/msg/string.hpp>
-#include <std_srvs/srv/set_bool.hpp>  // Include header for SetBool service
+#include <std_srvs/srv/set_bool.hpp>
 
 using namespace std::chrono_literals;
 
@@ -21,9 +21,16 @@ class PublisherNode : public rclcpp::Node {
      * Initializes the publisher, timer, and service for toggling publishing.
      */
     PublisherNode() : Node("publisher_node"), message_("Hello, this is Sarang"), publishing_enabled_(true) {
+        // Declare and get the parameter for publishing frequency
+        this->declare_parameter("publish_frequency", 2.0);
+        double publish_frequency = this->get_parameter("publish_frequency").as_double();
+
         // Create a publisher to publish to the "topic"
         publisher_ = this->create_publisher<std_msgs::msg::String>("topic", 10);
-        timer_ = this->create_wall_timer(500ms, std::bind(&PublisherNode::publish_message, this));
+        timer_ = this->create_wall_timer(
+            std::chrono::milliseconds(static_cast<int>(1000.0 / publish_frequency)),
+            std::bind(&PublisherNode::publish_message, this)
+        );
 
         // Create a service to toggle publishing on/off
         toggle_publishing_service_ = this->create_service<std_srvs::srv::SetBool>(
