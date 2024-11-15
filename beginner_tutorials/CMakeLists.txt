@@ -20,19 +20,11 @@ find_package(std_srvs REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(Catch2 2 REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
 
-add_executable(test_talker src/test_talker.cpp)
-
-target_link_libraries(test_talker Catch2::Catch2)
-ament_target_dependencies(test_talker rclcpp std_msgs tf2_ros)
-
-# Register the test with CTest
-add_test(NAME test_talker COMMAND test_talker)
-
-# Install targets
-install(TARGETS
-  test_talker
-  DESTINATION lib/${PROJECT_NAME}
+# Add the srv file to the build
+rosidl_generate_interfaces(${PROJECT_NAME}
+  "srv/TogglePublishingService.srv"
 )
 
 # Add executables
@@ -42,10 +34,22 @@ ament_target_dependencies(publisher_node rclcpp std_msgs std_srvs tf2_ros geomet
 add_executable(subscriber_node src/subscriber_node.cpp)
 ament_target_dependencies(subscriber_node rclcpp std_msgs)
 
+add_executable(test_talker tests/test_talker.cpp)
+
+ament_target_dependencies(test_talker rclcpp std_msgs tf2_ros Catch2)
+
+# Register the test with CTest
+add_test(NAME test_talker COMMAND test_talker)
+
+# Link the typesupport library to executables
+rosidl_get_typesupport_target(cpp_typesupport_target beginner_tutorials "rosidl_typesupport_cpp")
+target_link_libraries(publisher_node ${cpp_typesupport_target})
+
 # Install targets
 install(TARGETS
   publisher_node
   subscriber_node
+  test_talker
   DESTINATION lib/${PROJECT_NAME}
 )
 
