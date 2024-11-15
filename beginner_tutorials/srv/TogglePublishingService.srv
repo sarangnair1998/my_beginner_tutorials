@@ -1,0 +1,4 @@
+bool data  # Request to enable or disable publishing
+---
+bool success  # Response indicating if the request was successful
+string message  # Response message
