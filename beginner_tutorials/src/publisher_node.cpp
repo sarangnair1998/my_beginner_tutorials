@@ -1,3 +1,5 @@
+// Copyright 2024 Sarang
+
 #include <rclcpp/rclcpp.hpp>
 #include <std_msgs/msg/string.hpp>
 #include <tf2_ros/transform_broadcaster.h>
@@ -24,7 +26,8 @@ class PublisherNode : public rclcpp::Node {
             std::bind(&PublisherNode::publish_message, this));
 
         // Create a service to toggle publishing on/off
-        toggle_publishing_service_ = this->create_service<beginner_tutorials::srv::TogglePublishingService>(
+        toggle_publishing_service_ = this->
+        create_service<beginner_tutorials::srv::TogglePublishingService>(
             "toggle_publishing",
             std::bind(&PublisherNode::handle_toggle_publishing, this,
                       std::placeholders::_1, std::placeholders::_2));
@@ -56,8 +59,10 @@ class PublisherNode : public rclcpp::Node {
     }
 
     void handle_toggle_publishing(
-        const std::shared_ptr<beginner_tutorials::srv::TogglePublishingService::Request> request,
-        std::shared_ptr<beginner_tutorials::srv::TogglePublishingService::Response> response) {
+        const std::shared_ptr
+        <beginner_tutorials::srv::TogglePublishingService::Request> request,
+        std::shared_ptr
+        <beginner_tutorials::srv::TogglePublishingService::Response> response) {
         // Update the publishing state based on the service request
         publishing_enabled_ = request->data;
 
@@ -95,11 +100,12 @@ class PublisherNode : public rclcpp::Node {
     }
 
     rclcpp::Publisher<std_msgs::msg::String>::SharedPtr publisher_;
-    rclcpp::Service<beginner_tutorials::srv::TogglePublishingService>::SharedPtr toggle_publishing_service_;
+    rclcpp::Service<beginner_tutorials::srv::TogglePublishingService>::
+    SharedPtr toggle_publishing_service_;
     rclcpp::TimerBase::SharedPtr timer_;
     rclcpp::TimerBase::SharedPtr tf_timer_;
     std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
-    std::string message_; 
+    std::string message_;
     bool publishing_enabled_;
 };
 
