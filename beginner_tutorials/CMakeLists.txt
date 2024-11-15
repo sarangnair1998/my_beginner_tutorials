@@ -27,23 +27,19 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/TogglePublishingService.srv"
 )
 
+# Link the typesupport library to executables
+rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} "rosidl_typesupport_cpp")
+
 # Add executables
 add_executable(publisher_node src/publisher_node.cpp)
 ament_target_dependencies(publisher_node rclcpp std_msgs std_srvs tf2_ros geometry_msgs)
+target_link_libraries(publisher_node ${cpp_typesupport_target})
 
 add_executable(subscriber_node src/subscriber_node.cpp)
 ament_target_dependencies(subscriber_node rclcpp std_msgs)
 
 add_executable(test_talker tests/test_talker.cpp)
-
 ament_target_dependencies(test_talker rclcpp std_msgs tf2_ros Catch2)
-
-# Register the test with CTest
-add_test(NAME test_talker COMMAND test_talker)
-
-# Link the typesupport library to executables
-rosidl_get_typesupport_target(cpp_typesupport_target beginner_tutorials "rosidl_typesupport_cpp")
-target_link_libraries(publisher_node ${cpp_typesupport_target})
 
 # Install targets
 install(TARGETS
@@ -71,6 +67,16 @@ if(BUILD_TESTING)
   # a copyright and license is added to all source files
   set(ament_cmake_cpplint_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
+
+  # Register the test using a launch file (Catch2 Integration Test)
+  add_test(NAME integration_test COMMAND
+    ros2 launch ${PROJECT_NAME} publisher_test_launch.py
+  )
 endif()
 
 ament_package()
+
+# Include directories for generated code
+target_include_directories(publisher_node PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/rosidl_generator_cpp>
+  $<INSTALL_INTERFACE:include>)

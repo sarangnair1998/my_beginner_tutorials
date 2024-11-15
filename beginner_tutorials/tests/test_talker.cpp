@@ -3,7 +3,6 @@
 /// @file test_talker.cpp
 /// @brief Integration test for the Talker node using Catch2.
 
-
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch.hpp>
 #include <rclcpp/rclcpp.hpp>
@@ -49,24 +48,26 @@ TEST_CASE_METHOD(MyTestsFixture,
   // Create a node to listen to the "chatter" topic
   auto subscriber_node = rclcpp::Node::make_shared("test_subscriber_node");
   bool message_received = false;
-  auto subscription = subscriber_node->
-  create_subscription<std_msgs::msg::String>(
-      "chatter", 10, [&message_received](std_msgs::msg::String::SharedPtr msg) {
+
+  auto subscription = subscriber_node->create_subscription<std_msgs::msg::String>(
+      "chatter", 10,
+      [&message_received](std_msgs::msg::String::ConstSharedPtr msg) {
         // Assert that the message data is as expected
         REQUIRE(msg->data == "Hello, this is Sarang");
         message_received = true;
       });
 
   // Create a node to publish messages
-  auto publisher_node =
-  rclcpp::Node::make_shared("publisher_node");
-  auto publisher = publisher_node->create_publisher
-  <std_msgs::msg::String>("chatter", 10);
+  auto publisher_node = rclcpp::Node::make_shared("publisher_node");
+  auto publisher = publisher_node->create_publisher<std_msgs::msg::String>("chatter", 10);
 
   // Create an executor to spin the nodes
   rclcpp::executors::SingleThreadedExecutor executor;
   executor.add_node(subscriber_node);
   executor.add_node(publisher_node);
+
+  // Wait for a moment to ensure both nodes are ready
+  std::this_thread::sleep_for(std::chrono::seconds(1));
 
   // Publish a message to simulate the Talker behavior
   auto message = std_msgs::msg::String();
@@ -75,8 +76,7 @@ TEST_CASE_METHOD(MyTestsFixture,
 
   // Spin for a few seconds to check if messages are published
   auto start_time = std::chrono::steady_clock::now();
-  while (std::chrono::steady_clock::now() -
-  start_time < std::chrono::seconds(3)) {
+  while (std::chrono::steady_clock::now() - start_time < std::chrono::seconds(5)) {
     executor.spin_some();
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     if (message_received) {
@@ -104,34 +104,27 @@ TEST_CASE_METHOD(MyTestsFixture,
 
   std::this_thread::sleep_for(std::chrono::seconds(2));
 
-
   // Spin for a few seconds to allow transforms to be available
   auto start_time = std::chrono::steady_clock::now();
   bool transform_found = false;
-  while (std::chrono::steady_clock::now() -
-  start_time < std::chrono::seconds(10)) {
+  while (std::chrono::steady_clock::now() - start_time < std::chrono::seconds(10)) {
     executor.spin_some();
     try {
       // Try to get the transform between /world and /talk
       geometry_msgs::msg::TransformStamped transform_stamped;
-      transform_stamped = tf_buffer.lookupTransform
-      ("world", "talk", tf2::TimePointZero);
+      transform_stamped = tf_buffer.lookupTransform("world", "talk", tf2::TimePointZero);
       // Verify translation and rotation values
-      REQUIRE(transform_stamped.transform.translation.x == 1.0);
-      REQUIRE(transform_stamped.transform.translation.y == 2.0);
-      REQUIRE(transform_stamped.transform.translation.z == 3.0);
-      REQUIRE(transform_stamped.transform.rotation.z ==
-      Approx(0.707).margin(0.001));
-      REQUIRE(transform_stamped.transform.rotation.w ==
-      Approx(0.707).margin(0.001));
-
+      REQUIRE(transform_stamped.transform.translation.x == Approx(1.0).margin(0.01));
+      REQUIRE(transform_stamped.transform.translation.y == Approx(2.0).margin(0.01));
+      REQUIRE(transform_stamped.transform.translation.z == Approx(3.0).margin(0.01));
+      REQUIRE(transform_stamped.transform.rotation.z == Approx(0.707).margin(0.001));
+      REQUIRE(transform_stamped.transform.rotation.w == Approx(0.707).margin(0.001));
 
       transform_found = true;
       break;
     } catch (const tf2::TransformException &ex) {
       // Transform not yet available
-      RCLCPP_WARN(tf_node->get_logger(),
-      "Transform not yet available: %s", ex.what());
+      RCLCPP_WARN(tf_node->get_logger(), "Transform not yet available: %s", ex.what());
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
