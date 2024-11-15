@@ -3,6 +3,8 @@
 #include <rclcpp/rclcpp.hpp>
 #include <std_msgs/msg/string.hpp>
 #include <std_srvs/srv/set_bool.hpp>
+#include <tf2_ros/transform_broadcaster.h>
+#include <geometry_msgs/msg/transform_stamped.hpp>
 
 using namespace std::chrono_literals;
 
@@ -12,13 +14,13 @@ using namespace std::chrono_literals;
 
 /**
  * @class PublisherNode
- * @brief A ROS2 node that publishes messages periodically and provides a service to toggle publishing on or off.
+ * @brief A ROS2 node that publishes messages periodically, broadcasts a TF transform, and provides a service to toggle publishing on or off.
  */
 class PublisherNode : public rclcpp::Node {
  public:
     /**
      * @brief Constructor for PublisherNode.
-     * Initializes the publisher, timer, and service for toggling publishing.
+     * Initializes the publisher, timer, service for toggling publishing, and the TF broadcaster.
      */
     PublisherNode()
         : Node("publisher_node"), message_("Hello, this is Sarang"),
@@ -41,6 +43,13 @@ class PublisherNode : public rclcpp::Node {
             "toggle_publishing",
             std::bind(&PublisherNode::handle_toggle_publishing, this,
                       std::placeholders::_1, std::placeholders::_2));
+
+        // Create a TransformBroadcaster
+        tf_broadcaster_ = std::make_shared<tf2_ros::TransformBroadcaster>(this);
+
+        // Timer to periodically broadcast the TF transform
+        tf_timer_ = this->create_wall_timer(
+            500ms, std::bind(&PublisherNode::broadcast_tf, this));
 
         RCLCPP_INFO_STREAM(this->get_logger(),
                            "PublisherNode has started. "
@@ -91,10 +100,38 @@ class PublisherNode : public rclcpp::Node {
         response->success = true;
     }
 
+    /**
+     * @brief Broadcasts a TF transform with the frame "talk" as child of "world".
+     */
+    void broadcast_tf() {
+        geometry_msgs::msg::TransformStamped transformStamped;
+        
+        // Set the header and frame information
+        transformStamped.header.stamp = this->now();
+        transformStamped.header.frame_id = "world";
+        transformStamped.child_frame_id = "talk";
+
+        // Set a non-zero translation
+        transformStamped.transform.translation.x = 1.0;
+        transformStamped.transform.translation.y = 2.0;
+        transformStamped.transform.translation.z = 3.0;
+
+        // Set a non-zero rotation (as quaternion)
+        transformStamped.transform.rotation.x = 0.0;
+        transformStamped.transform.rotation.y = 0.0;
+        transformStamped.transform.rotation.z = 0.707;  // 90 degrees around Z-axis
+        transformStamped.transform.rotation.w = 0.707;
+
+        // Broadcast the transform
+        tf_broadcaster_->sendTransform(transformStamped);
+    }
+
     rclcpp::Publisher<std_msgs::msg::String>::SharedPtr publisher_;
     rclcpp::Service<std_srvs::srv::SetBool>::SharedPtr
-    toggle_publishing_service_;
+        toggle_publishing_service_;
     rclcpp::TimerBase::SharedPtr timer_;
+    rclcpp::TimerBase::SharedPtr tf_timer_;
+    std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
     std::string message_; /**< The message to be published. */
     bool publishing_enabled_;
 };
