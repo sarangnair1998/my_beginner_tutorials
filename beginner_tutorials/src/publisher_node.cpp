@@ -105,7 +105,6 @@ class PublisherNode : public rclcpp::Node {
      */
     void broadcast_tf() {
         geometry_msgs::msg::TransformStamped transformStamped;
-        
         // Set the header and frame information
         transformStamped.header.stamp = this->now();
         transformStamped.header.frame_id = "world";
@@ -119,7 +118,7 @@ class PublisherNode : public rclcpp::Node {
         // Set a non-zero rotation (as quaternion)
         transformStamped.transform.rotation.x = 0.0;
         transformStamped.transform.rotation.y = 0.0;
-        transformStamped.transform.rotation.z = 0.707;  // 90 degrees around Z-axis
+        transformStamped.transform.rotation.z = 0.707;  // 90 degrees
         transformStamped.transform.rotation.w = 0.707;
 
         // Broadcast the transform
