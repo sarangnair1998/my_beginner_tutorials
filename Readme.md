@@ -93,9 +93,19 @@ To build this package, follow these steps:
    ```sh
    ros2 launch beginner_tutorials publisher_subscriber_launch.py record:=true
    ```
-   **Close it using Ctrl-C**
 
-5. **Replay Bag File**:
+5. **Inspecting TF Frames**:
+   To inspect the TF frames being broadcasted by the publisher node:
+   ```sh
+   ros2 run tf2_ros tf2_echo world talk
+   ```
+   You can also generate a PDF representation of the TF tree:
+   ```sh
+   ros2 run tf2_tools view_frames
+   ```
+   The output will be saved as `frames.pdf`.
+
+6. **Replay Bag File**:
    To replay the recorded bag file and verify the messages:
    - Run the subscriber node:
      ```sh
@@ -106,15 +116,31 @@ To build this package, follow these steps:
      ros2 bag play results/
      ```
 
+7. **Inspecting Bag File**:
+   To verify the contents of the recorded bag file:
+   ```sh
+   ros2 bag info results/
+   ```
+   This command will display information about the topics, message types, and duration of the bag file.
+
 ## Running Tests
 
-To run the integration tests:
+To run the integration tests, first ensure the `publisher_node` is running. The tests depend on the messages and TF frames being published.
 
-```sh
-colcon test --packages-select beginner_tutorials
-```
+1. **Run the Publisher Node**:
+   ```sh
+   source install/setup.bash
+   ros2 run beginner_tutorials publisher_node
+   ```
 
-Ensure that all tests pass successfully.
+2. **Run the Integration Test**:
+   In another terminal, run the test executable directly:
+   ```sh
+   source install/setup.bash
+   ./build/beginner_tutorials/test_talker
+   ```
+
+**Note**: Running `colcon test` directly will not work as it does not start the necessary publisher node before executing the tests.
 
 ## License
 
